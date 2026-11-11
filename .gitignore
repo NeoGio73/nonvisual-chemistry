@@ -1,0 +1,10 @@
+# Local tooling
+.claude/
+
+# Internal build instructions (mention reviewers and the private exam set); kept off the public repo
+NONVISUAL_CHEMISTRY_HANDOFF.md
+
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store

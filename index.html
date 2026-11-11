@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Non-Visual Chemistry</title>
+<meta name="description" content="Read NMR and IR spectra, molecular shape and conformational energy by ear and by hand, with a DualSense controller or the keyboard alone.">
+<link rel="stylesheet" href="shared/ui.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<main id="main">
+  <h1>Non-Visual Chemistry</h1>
+  <p class="lede">Tools for reading spectra, molecular shape and conformational energy by ear and by hand,
+    built for students who are blind or have low vision.</p>
+  <p>Each tool works two ways: with a PlayStation DualSense controller, which taps, vibrates and pushes back
+    through its triggers, or with the keyboard and sound alone. No controller is required.</p>
+
+  <div class="status" id="status" role="status" aria-live="polite" data-tone="warn">
+    <strong id="statusTitle">No controller connected.</strong>
+    <span id="statusHelp">The keyboard and sound path works without one.</span>
+  </div>
+  <div class="row">
+    <a class="button primary" href="controller-test.html">Test a controller</a>
+  </div>
+
+  <h2>Modules</h2>
+  <section class="card" aria-labelledby="m1">
+    <h3 id="m1">1. Spectra by ear and hand</h3>
+    <p>Move along a ¹H NMR spectrum and hear each signal: pitch follows chemical shift in ppm, and the
+      controller taps once for each line of a singlet to a quartet, with one distinct pattern for anything
+      more complex. A spoken readout gives the shift, multiplicity, number of hydrogens and J in Hz, and a
+      spoken summary lists every signal from high to low shift. IR follows, read in cm⁻¹.</p>
+    <p class="muted">Next. ¹H NMR first.</p>
+  </section>
+  <section class="card" aria-labelledby="m2">
+    <h3 id="m2">2. Energy by force</h3>
+    <p>Feel the Barrier, made fully usable without a screen: the trigger pushes back with the energy of each
+      conformation, and spoken readouts give the dihedral angle, energy in kJ/mol and conformation name.</p>
+    <p class="muted">Planned, after NMR.</p>
+  </section>
+  <section class="card" aria-labelledby="m3">
+    <h3 id="m3">3. Shape by touch</h3>
+    <p>Probe around a central atom and feel one bump per bonded atom, so tetrahedral (109.5°), trigonal planar
+      (120°) and linear (180°) geometries feel different.</p>
+    <p class="muted">Planned.</p>
+  </section>
+
+  <h2>Without a controller</h2>
+  <p>Every action has a key, every reading can be spoken, and taps play as clicks. Pages are tested for
+    keyboard use and screen readers (NVDA on Windows, VoiceOver on macOS).</p>
+
+  <h2>Browser support</h2>
+  <p>Direct controller access, needed for trigger resistance and full-strength taps, works in Chrome and Edge
+    on a computer. Other browsers can read the controller's sticks and buttons and give weaker vibration.</p>
+
+  <footer>
+    <p>Designed with expert review; user evaluation pending.</p>
+    <p>Code under the MIT License; content under CC BY 4.0.</p>
+  </footer>
+</main>
+<script src="shared/dualsense.js"></script>
+<script>
+(function () {
+  const S = {
+    none: ['warn', 'No controller connected.', 'The keyboard and sound path works without one.'],
+    usb: ['ok', 'Controller connected by USB cable.', 'Taps and trigger resistance are available.'],
+    bt: ['ok', 'Controller connected by Bluetooth.', 'Taps and trigger resistance are available.'],
+    gamepad: ['warn', 'A controller is detected but has no direct access.', 'Open the controller test to connect it fully.'],
+    unsupported: ['warn', 'This browser cannot connect to the controller directly.', 'Use Chrome or Edge for trigger resistance. The keyboard path works here.']
+  };
+  function show(s) {
+    const t = S[s] || S.none;
+    document.getElementById('status').dataset.tone = t[0];
+    document.getElementById('statusTitle').textContent = t[1];
+    document.getElementById('statusHelp').textContent = ' ' + t[2];
+  }
+  DualSense.on('status', show);
+  show(DualSense.webHidAvailable ? DualSense.status : 'unsupported');
+})();
+</script>
+</body>
+</html>

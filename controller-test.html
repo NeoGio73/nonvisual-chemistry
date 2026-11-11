@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controller Test</title>
+<meta name="description" content="Check that a DualSense controller connects and that taps, trigger resistance, sticks and buttons work, before using the Non-Visual Chemistry modules.">
+<link rel="stylesheet" href="shared/ui.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<main id="main">
+  <p><a href="index.html">Non-Visual Chemistry</a></p>
+  <h1>Controller test</h1>
+  <p class="lede">Plug the DualSense in with a USB cable, choose <strong>Connect controller</strong>, then press
+    <strong>Cross</strong> (the × button). You should feel four short taps.</p>
+  <p class="muted">Everything on this page also works from the keyboard. Keys <kbd>1</kbd> to <kbd>4</kbd> play
+    1 to 4 taps, <kbd>F</kbd> plays the complex pattern, <kbd>R</kbd> reads the controller state,
+    <kbd>Escape</kbd> stops all vibration.</p>
+  <p class="muted">With a screen reader in browse mode, those single keys go to the screen reader instead.
+    Every action is also a button on this page: move to it with <kbd>Tab</kbd> and press <kbd>Enter</kbd>.
+    In NVDA, <kbd>NVDA</kbd>+<kbd>Space</kbd> switches to focus mode, where the single keys reach the page.
+    Controller buttons work in either mode.</p>
+
+  <div class="status" id="status" role="status" aria-live="polite" data-tone="warn">
+    <strong id="statusTitle">No controller connected.</strong>
+    <span id="statusHelp">Plug the controller in with a USB cable and choose Connect controller.</span>
+  </div>
+  <div class="row">
+    <button class="primary" id="connectBtn" type="button">Connect controller</button>
+  </div>
+
+  <!-- Polite announcements of button presses; kept separate from the status line -->
+  <div id="announce" class="visually-hidden" aria-live="polite"></div>
+
+  <h2 id="tapsHead">Taps</h2>
+  <section class="card" aria-labelledby="tapsHead">
+    <p>On the controller: <strong>Square</strong> 1 tap, <strong>Triangle</strong> 2 taps,
+      <strong>Circle</strong> 3 taps, <strong>Cross</strong> 4 taps, <strong>Options</strong> the complex pattern.
+      The NMR page uses 1 to 4 taps for a singlet to a quartet and the complex pattern for anything else
+      (doublet of doublets, multiplet).</p>
+    <div class="row" role="group" aria-label="Play taps">
+      <button type="button" data-taps="1">1 tap</button>
+      <button type="button" data-taps="2">2 taps</button>
+      <button type="button" data-taps="3">3 taps</button>
+      <button type="button" data-taps="4">4 taps</button>
+      <button type="button" id="flutterBtn">Complex pattern</button>
+      <button type="button" id="stopBtn">Stop vibration</button>
+    </div>
+    <p>
+      <label for="onMs">Tap length: <output id="onMsOut" for="onMs">70 ms</output></label><br>
+      <input type="range" id="onMs" min="60" max="80" step="5" value="70">
+    </p>
+    <p>
+      <label for="offMs">Gap between taps: <output id="offMsOut" for="offMs">120 ms</output></label><br>
+      <input type="range" id="offMs" min="80" max="250" step="10" value="120">
+    </p>
+    <p>
+      <label for="strength">Tap strength: <output id="strengthOut" for="strength">200 of 255</output></label><br>
+      <input type="range" id="strength" min="180" max="220" step="10" value="200">
+    </p>
+    <p class="muted">The gap range 80 to 250 ms is the range the NMR page will use for coupling
+      constants: a wider gap for a larger J. Try a few and note which counts are easiest to feel.</p>
+  </section>
+
+  <h2 id="trigHead">Trigger resistance</h2>
+  <section class="card" aria-labelledby="trigHead">
+    <p>Pick a pattern, then pull <strong>R2</strong> or <strong>L2</strong> slowly. The trigger travel is split into
+      10 zones; each zone resists at a level from 0 (loose) to 8 (stiffest). On the controller,
+      <strong>L1</strong> and <strong>R1</strong> step through the patterns.</p>
+    <fieldset>
+      <legend>Resistance pattern</legend>
+      <div id="patterns"></div>
+    </fieldset>
+    <p id="patternNote" class="muted"></p>
+  </section>
+
+  <h2 id="liveHead">Live readout</h2>
+  <section class="card" aria-labelledby="liveHead">
+    <p class="muted">This table updates continuously and is not announced. Use <strong>Read state</strong>
+      (key <kbd>R</kbd>) to hear it.</p>
+    <table>
+      <caption class="visually-hidden">Current controller input</caption>
+      <tbody>
+        <tr><th scope="row">L2 trigger</th><td class="num" id="vL2">0 %</td></tr>
+        <tr><th scope="row">R2 trigger</th><td class="num" id="vR2">0 %</td></tr>
+        <tr><th scope="row">Left stick</th><td class="num" id="vLS">left–right 0 %, up–down 0 %</td></tr>
+        <tr><th scope="row">Right stick</th><td class="num" id="vRS">left–right 0 %, up–down 0 %</td></tr>
+        <tr><th scope="row">Buttons held</th><td id="vBtn">none</td></tr>
+        <tr><th scope="row">Last button pressed</th><td id="vLast">none yet</td></tr>
+      </tbody>
+    </table>
+    <div class="row"><button type="button" id="readBtn">Read state</button></div>
+  </section>
+
+  <h2 id="setHead">Settings</h2>
+  <section class="card" aria-labelledby="setHead">
+    <p class="choice"><input type="checkbox" id="reduced"><label for="reduced">Reduced haptics (taps, rumble and
+      trigger resistance at half strength)</label></p>
+    <p class="choice"><input type="checkbox" id="announceBtns" checked><label for="announceBtns">Announce controller
+      button presses to the screen reader</label></p>
+    <fieldset>
+      <legend>Play taps as clicks</legend>
+      <p class="choice"><input type="radio" name="clicks" id="clicksAuto" value="auto" checked><label for="clicksAuto">Only
+        when no controller is connected</label></p>
+      <p class="choice"><input type="radio" name="clicks" id="clicksAlways" value="always"><label for="clicksAlways">Always</label></p>
+      <p class="choice"><input type="radio" name="clicks" id="clicksNever" value="never"><label for="clicksNever">Never</label></p>
+    </fieldset>
+    <p>
+      <label for="volume">Click volume: <output id="volumeOut" for="volume">60 %</output></label><br>
+      <input type="range" id="volume" min="0" max="100" step="5" value="60">
+    </p>
+  </section>
+
+  <details>
+    <summary>Connection log</summary>
+    <pre class="log" id="log" aria-label="Connection log"></pre>
+  </details>
+
+  <footer>
+    <p>Direct controller access (taps at full strength and trigger resistance) needs Chrome or Edge.
+      Other browsers can read the sticks and buttons and give weaker vibration.</p>
+    <p>Designed with expert review; user evaluation pending. Code MIT License, content CC BY 4.0.</p>
+  </footer>
+</main>
+
+<script src="shared/dualsense.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const DS = window.DualSense;
+
+  /* ---------- Settings, kept in this browser only ---------- */
+  const KEY = 'nvc.controllerTest';
+  const settings = { onMs: 70, offMs: 120, strength: 200, reduced: false, announce: true, clicks: 'auto', volume: 60, pattern: 'off' };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* storage unavailable */ }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (e) { /* storage unavailable */ } }
+
+  /* ---------- Status ---------- */
+  const STATUS = {
+    none: ['warn', 'No controller connected.', 'Plug the controller in with a USB cable and choose Connect controller. Without one, taps play as clicks.'],
+    usb: ['ok', 'Controller connected by USB cable.', 'Taps and trigger resistance are on. Press Cross to feel four taps.'],
+    bt: ['ok', 'Controller connected by Bluetooth.', 'Taps and trigger resistance are on. Press Cross to feel four taps.'],
+    gamepad: ['warn', 'The browser sees a controller but has no direct access.', 'Buttons and sticks work and taps are weaker; the triggers cannot push back. Choose Connect controller to give direct access.'],
+    unsupported: ['bad', 'This browser cannot connect to the controller directly.', 'Use Chrome or Edge. Everything else on this page still works from the keyboard.'],
+    blocked: ['bad', 'The browser blocked the connection.', 'If this page is inside another page, open it on its own and try again.'],
+    error: ['bad', 'The controller could not be opened.', 'Close other tabs or programs using it, unplug it, plug it back in, and try again.']
+  };
+  function showStatus(s) {
+    const t = STATUS[s] || STATUS.none;
+    $('status').dataset.tone = t[0];
+    $('statusTitle').textContent = t[1];
+    $('statusHelp').textContent = ' ' + t[2];
+    $('connectBtn').textContent = (s === 'usb' || s === 'bt') ? 'Reconnect' : 'Connect controller';
+  }
+  DS.on('status', s => {
+    showStatus(s);
+    if (s === 'usb' || s === 'bt') { applyPattern(false); DS.preset('connected'); }
+  });
+
+  const logLines = [];
+  DS.on('log', msg => {
+    const t = new Date();
+    const stamp = [t.getHours(), t.getMinutes(), t.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+    logLines.push(stamp + '  ' + msg);
+    while (logLines.length > 60) logLines.shift();
+    $('log').textContent = logLines.join('\n');
+  });
+
+  $('connectBtn').addEventListener('click', () => { unlockAudio(); DS.connect(); });
+
+  /* ---------- Click sound for taps (Web Audio, starts only after a click or key press) ---------- */
+  let ctx = null, noise = null;
+  function unlockAudio() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    noise = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.03), ctx.sampleRate);
+    const ch = noise.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  }
+  function clickAt(when) {
+    const src = ctx.createBufferSource(); src.buffer = noise;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2000; bp.Q.value = 1.2;
+    const g = ctx.createGain();
+    const peak = (settings.volume / 100) * 0.9;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), when + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.025);
+    src.connect(bp).connect(g).connect(ctx.destination);
+    src.start(when); src.stop(when + 0.03);
+  }
+  function wantClicks() {
+    if (settings.clicks === 'always') return true;
+    if (settings.clicks === 'never') return false;
+    return !DS.state.connected;
+  }
+  function playClicks(times) {
+    if (!wantClicks() || !ctx || settings.volume === 0) return;
+    const t0 = ctx.currentTime + 0.02;
+    times.forEach(ms => clickAt(t0 + ms / 1000));
+  }
+
+  /* ---------- Taps ---------- */
+  function tapOpts() { return { onMs: settings.onMs, offMs: settings.offMs, strong: settings.strength }; }
+  function playTaps(n) {
+    DS.tap(n, tapOpts());
+    const times = [];
+    for (let i = 0; i < n; i++) times.push(i * (settings.onMs + settings.offMs));
+    playClicks(times);
+  }
+  function playFlutter() {
+    DS.preset('flutter');
+    playClicks([0, 80, 170, 255, 330]); // start of each pulse in the driver's 400 ms flutter
+  }
+  document.querySelectorAll('[data-taps]').forEach(b => b.addEventListener('click', () => { unlockAudio(); playTaps(+b.dataset.taps); }));
+  $('flutterBtn').addEventListener('click', () => { unlockAudio(); playFlutter(); });
+  $('stopBtn').addEventListener('click', () => { DS.stopHaptics(); say('Vibration stopped.'); });
+
+  // unit is printed; spoken is what a screen reader announces as the slider's value
+  function bindRange(id, outId, key, unit, spoken) {
+    const el = $(id);
+    el.value = settings[key];
+    const show = () => {
+      $(outId).textContent = el.value + unit;
+      el.setAttribute('aria-valuetext', el.value + spoken);
+    };
+    show();
+    el.addEventListener('input', () => { settings[key] = +el.value; show(); save(); });
+  }
+  bindRange('onMs', 'onMsOut', 'onMs', ' ms', ' milliseconds');
+  bindRange('offMs', 'offMsOut', 'offMs', ' ms', ' milliseconds');
+  bindRange('strength', 'strengthOut', 'strength', ' of 255', ' of 255');
+  bindRange('volume', 'volumeOut', 'volume', ' %', ' percent');
+
+  /* ---------- Trigger resistance patterns (level 0–8 for each of the 10 zones) ---------- */
+  const PATTERNS = [
+    { id: 'off',   name: 'Off', zones: null, note: 'Both triggers loose.' },
+    { id: 'even',  name: 'Even', zones: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], note: 'Level 4 of 8 the whole way.' },
+    { id: 'ramp',  name: 'Ramp', zones: [0, 1, 2, 3, 4, 5, 6, 7, 8, 8], note: 'Loose at the start, rising one level per zone to 8 of 8.' },
+    { id: 'wall',  name: 'Wall', zones: [0, 0, 0, 0, 0, 0, 0, 8, 8, 8], note: 'Loose for the first 7 zones, then 8 of 8 for the last 3.' },
+    { id: 'bumps', name: 'Bumps', zones: [0, 6, 0, 6, 0, 6, 0, 6, 0, 6], note: 'Alternating loose and level 6 of 8: five bumps across the pull.' }
+  ];
+  const holder = $('patterns');
+  PATTERNS.forEach(p => {
+    const row = document.createElement('p');
+    row.className = 'choice';
+    row.innerHTML = '<input type="radio" name="pattern" id="pat-' + p.id + '" value="' + p.id + '"><label for="pat-' + p.id + '">' + p.name + '</label>';
+    holder.appendChild(row);
+  });
+  function patternIndex() { return Math.max(0, PATTERNS.findIndex(p => p.id === settings.pattern)); }
+  function applyPattern(announce) {
+    const p = PATTERNS[patternIndex()];
+    $('pat-' + p.id).checked = true;
+    $('patternNote').textContent = p.note + (DS.hasResistance ? '' : ' Connect the controller to feel it.');
+    DS.setTrigger('both', p.zones);
+    if (announce) say('Resistance: ' + p.name + '. ' + p.note);
+  }
+  holder.addEventListener('change', e => {
+    if (e.target.name === 'pattern') { settings.pattern = e.target.value; save(); applyPattern(false); }
+  });
+  function stepPattern(d) {
+    const i = (patternIndex() + d + PATTERNS.length) % PATTERNS.length;
+    settings.pattern = PATTERNS[i].id; save(); applyPattern(true);
+  }
+
+  /* ---------- Settings ---------- */
+  $('reduced').checked = settings.reduced;
+  DS.reducedHaptics = settings.reduced;
+  $('reduced').addEventListener('change', e => {
+    settings.reduced = e.target.checked; DS.reducedHaptics = settings.reduced; save(); applyPattern(false);
+  });
+  $('announceBtns').checked = settings.announce;
+  $('announceBtns').addEventListener('change', e => { settings.announce = e.target.checked; save(); });
+  document.querySelectorAll('input[name="clicks"]').forEach(r => {
+    r.checked = r.value === settings.clicks;
+    r.addEventListener('change', () => { if (r.checked) { settings.clicks = r.value; save(); } });
+  });
+
+  /* ---------- Announcements ---------- */
+  let clearTimer = 0;
+  function say(text) {
+    const el = $('announce');
+    el.textContent = '';
+    // A fresh text node after a short pause makes screen readers repeat identical messages
+    setTimeout(() => { el.textContent = text; }, 30);
+    clearTimeout(clearTimer);
+    clearTimer = setTimeout(() => { el.textContent = ''; }, 4000);
+  }
+
+  /* ---------- Controller buttons ---------- */
+  const ACTIONS = {
+    square: ['1 tap', () => playTaps(1)],
+    triangle: ['2 taps', () => playTaps(2)],
+    circle: ['3 taps', () => playTaps(3)],
+    cross: ['4 taps', () => playTaps(4)],
+    options: ['complex pattern', () => playFlutter()],
+    l1: [null, () => stepPattern(-1)],
+    r1: [null, () => stepPattern(1)]
+  };
+  DS.on('button', (name, down) => {
+    if (!down) return;
+    const label = DS.LABELS[name] || name;
+    $('vLast').textContent = label;
+    const act = ACTIONS[name];
+    if (act) {
+      act[1]();
+      if (act[0] && settings.announce) say(label + ': ' + act[0] + '.');
+    } else if (settings.announce) {
+      say(label + '.');
+    }
+  });
+
+  /* ---------- Live readout ---------- */
+  const pct = v => Math.round(v * 100);
+  const signed = v => { const n = pct(v); return (n > 0 ? '+' : '') + n + ' %'; };
+  function stickText(x, y) { return 'left–right ' + signed(x) + ', up–down ' + signed(-y); }
+  function heldText() {
+    const held = DS.BUTTON_NAMES.filter(n => DS.state.buttons[n]).map(n => DS.LABELS[n]);
+    return held.length ? held.join(', ') : 'none';
+  }
+  setInterval(() => {
+    const s = DS.state;
+    $('vL2').textContent = pct(s.l2) + ' %';
+    $('vR2').textContent = pct(s.r2) + ' %';
+    $('vLS').textContent = stickText(s.lx, s.ly);
+    $('vRS').textContent = stickText(s.rx, s.ry);
+    $('vBtn').textContent = heldText();
+  }, 100);
+  function readState() {
+    const s = DS.state;
+    say('L2 ' + pct(s.l2) + ' percent. R2 ' + pct(s.r2) + ' percent. Left stick ' + stickText(s.lx, s.ly).replace(/%/g, 'percent') +
+      '. Right stick ' + stickText(s.rx, s.ry).replace(/%/g, 'percent') + '. Buttons held: ' + heldText() + '.');
+  }
+  $('readBtn').addEventListener('click', readState);
+
+  /* ---------- Keyboard ---------- */
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'textarea' || (tag === 'input' && /^(text|search|number|email)$/.test(e.target.type))) return;
+    unlockAudio();
+    if (/^[1-4]$/.test(e.key)) { playTaps(+e.key); e.preventDefault(); }
+    else if (e.key === 'f' || e.key === 'F') { playFlutter(); }
+    else if (e.key === 'r' || e.key === 'R') { readState(); }
+    else if (e.key === 'Escape') { DS.stopHaptics(); say('Vibration stopped.'); }
+  });
+  document.addEventListener('pointerdown', unlockAudio, { once: true });
+
+  showStatus(DS.status);
+  applyPattern(false);
+})();
+</script>
+</body>
+</html>
